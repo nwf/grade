@@ -83,8 +83,14 @@ sub doDing($) { # {{{
   seek DEFINES, $sectionoffset, 0;
   while(my $line = <DEFINES>) {
     last if ($line =~ /^@/);
+    chomp $line;
     if ($line =~ /^:$ding\s+(.*)$/) {
-      $dingsum += $1;
+      my $dingmod = $1;
+      if ($dingmod =~ /^!(.*)$/) {
+        $pointsset = $1;
+      } else {
+        $dingsum += $1;
+      }
       push @$dingtext, "($1)";
       untilDefinesDot(sub ($) { push @$dingtext, @_; });
       push @$dingtext, "";

@@ -164,10 +164,17 @@ Within sections, each flag definition takes the form ::
    .
 
 ``flag-name`` is the name of the flag used in the grading data files.
-``score-modifier`` is a number (as understood by Perl) and is almost always
-negative (i.e., beginning with a ``-``), but positive numbers are understood
-for some form of extra credit.  (Note that the script will refuse to set a
-score higher than the section maximum.)
+``score-modifier`` is either 
+
+* a number (as understood by Perl), which adjusts the score of this section
+  appropriately.  As such, this number is almost always negative (i.e.,
+  beginning with a ``-``), but positive numbers are understood for some form
+  of extra credit.  (Note that the script will refuse to set a score higher
+  than the section maximum.)
+
+* a ``!`` followed by a number, again, as understood by Perl, usually ``0``.
+  Engaging a flag so defined will cause the grading script to act as if a
+  ``!pointsset`` directive was encountered.
 
 Text between the line beginning with ``:`` and the dot on a line by itself
 will be copied into student grade reports whenever the flag is given in a
