@@ -67,6 +67,7 @@ sub findDefinesSection($) { # {{{
       my $secargs = $1;
       if ($secargs =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(.*)$/) {
         ($secty, $secmax, $secextra, $secname) = ($1,$2,$3,$4);
+        $secty =~ s/^!//;	# strip no-skeleton directive
       } else { die "Malformed section line"; }
       return;
     }

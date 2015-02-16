@@ -143,7 +143,9 @@ where
   not contain whitespace.
 
 * ``type`` indicates to the ``grade.pl`` script how to interpret this
-  section.
+  section.  If ``type`` begins with ``!``, the section will be omitted
+  from the generated skeleton and this initial ``!`` will be stripped
+  from the type before consulting the following choices.
 
   * Type ``0`` defines a section of define flags whose invoked scores are
     simply summed.  ``extra`` is ignored for this type.  This is the only
