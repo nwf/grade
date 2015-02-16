@@ -187,7 +187,17 @@ introduce many flags, a simple "see the note below" in the prose has
 sufficed.  Of course, this is up to judgement and taste.
 
 Lines that begin with ``#`` and not ``#!`` will be copied into the skeleton.
-Lines beginning with ``#!`` will be ignored entirely.
+Lines beginning with ``#!`` will be ignored entirely, except for some
+additional advanced handling:
+
+* ``#!\n`` (yes, a literal backslash) will cause an empty line to be emitted
+  into the skeleton if the containing section is not being skipped.
+
+* ``#!noskip`` will cause subsequent comment lines in a skipped section to
+  to be emitted.  In a non-skipped section, it has no effect.
+
+* ``#!reskip`` will cause subsequent comment lines to be skipped if the
+  containing section is skipped.  It has no effect otherwise.
 
 Continuing the example above, the corresponding ``defines.conf`` contains,
 among other defines ::

@@ -7,8 +7,10 @@
 use strict;
 use warnings;
 
+my $sawsec = 0;
 my $section = undef;
 my $skipsec = 0;
+my $skipcom = 0;
 
 sub comments() {
   print "\n\$BEGIN_COMMENTS\n\n\$END_COMMENTS\n\n";
@@ -19,24 +21,35 @@ while(my $line = <STDIN>) {
 
   # @section directive?
   if ($line =~ /^@(\S+)\s+(\S+)\s+/) {
+    $sawsec = 1;
     comments() if defined $section and not $skipsec;
-    $section = $1;
-    $skipsec = 0;
-    if ($2 =~ /^!/) { $skipsec = 1; next; }
-    print "\@$section\n";
+    if ($2 =~ /^!/) {
+      $skipsec = 1;
+      $skipcom = 1;
+      $section = undef;
+      next;
+    } else {
+      $skipsec = 0;
+      $skipcom = 0;
+      $section = $1;
+      print "\@$section\n";
+    }
   }
 
   # :define directive?
   elsif ($line =~ /^(:\S+)\s+/) {
-    die "Directive not within section" if not defined $section;
+    die "Directive not within section" if not defined $section and not $skipsec;
     print "#$1\n" if not $skipsec;
     while (my $cline = <STDIN>) { chomp $cline; last if $cline eq "."; }
   }
 
   # "#..." and not "#!..." get passed to template
   elsif ($line =~ /^\s*#/) {
+    if ($line =~ /^\s*#!\\n$/) { print "\n" if not $skipcom; }
+    if ($line =~ /^\s*#!noskip$/) { $skipcom = 0; }
+    if ($line =~ /^\s*#!reskip$/) { $skipcom = $skipsec; }
     if ($line !~ /^\s*#!/) {
-      print "$line\n" if not $skipsec;
+      print "$line\n" if not $skipcom;
     }
   }
 
@@ -45,5 +58,5 @@ while(my $line = <STDIN>) {
   else { die "Unknown line in definition file ($line)"; }
 }
 
-die "No sections encountered" if not defined $section;
+die "No sections encountered" if not $sawsec;
 comments() if not $skipsec;
