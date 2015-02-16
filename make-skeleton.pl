@@ -14,6 +14,8 @@ sub comments() {
 }
 
 while(my $line = <STDIN>) {
+  chomp $line;
+
   # @section directive?
   if ($line =~ /^@(\S+)\s/) {
     comments() if defined $section;
@@ -25,14 +27,19 @@ while(my $line = <STDIN>) {
   elsif ($line =~ /^(:\S+)\s+/) {
     die "Directive not within section" if not defined $section;
     print "#$1\n";
+    while (my $cline = <STDIN>) { chomp $cline; last if $cline eq "."; }
   }
 
   # "#..." and not "#!..." get passed to template
-  elsif ($line =~ /^#(?!#)/) {
-    print $line;
+  elsif ($line =~ /^\s*#/) {
+    if ($line !~ /^\s*#!/) {
+      print "$line\n";
+    }
   }
 
-  else { die "Unknown line in definition file"; }
+  elsif ($line =~ /^\s*$/) { ; }
+
+  else { die "Unknown line in definition file ($line)"; }
 }
 
 die "No sections encountered" if not defined $section;
