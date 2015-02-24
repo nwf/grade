@@ -37,9 +37,13 @@ while(my $line = <STDIN>) {
   }
 
   # :define directive?
-  elsif ($line =~ /^(:\S+)\s+/) {
+  elsif ($line =~ /^(:\S+)\s+[^#]*(#.*)?$/) {
     die "Directive not within section" if not defined $section and not $skipsec;
-    print "#$1\n" if not $skipsec;
+    if (defined $2) {
+        print "#$1 $2\n" if not $skipsec;
+    } else {
+        print "#$1\n" if not $skipsec;
+    }
     while (my $cline = <STDIN>) { chomp $cline; last if $cline eq "."; }
   }
 
