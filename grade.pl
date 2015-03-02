@@ -85,6 +85,7 @@ sub doDing($) { # {{{
   while(my $line = <DEFINES>) {
     last if ($line =~ /^@/);
     chomp $line;
+    $line =~ s/#.*$//;
     if ($line =~ /^:$ding\s+(.*)$/) {
       my $dingmod = $1;
       if ($dingmod =~ /^!(.*)$/) {
@@ -142,7 +143,7 @@ sub finishOverall() { # {{{
 } # }}}
 # Main dispatch {{{
 while(my $line = <STDIN>) {
-  $line =~ s/#.*$//;	# trim line comments
+  $line =~ s/#.*$//;    # trim line comments
   next if ($line =~ /^\s*$/) ;
   chomp $line;
 
@@ -181,11 +182,16 @@ while(my $line = <STDIN>) {
     my $seen_text = 0;
     while (my $cline = <STDIN>) {
       chomp $cline;
-      last if $cline =~ /^\$END_COMMENTS/;
-      next if (not $seen_text and $cline =~ /^$/);
+      if ($cline =~ /^\$END_COMMENTS/) {
+        $seen_text = 2;
+        last;
+      }
+      next if (not $seen_text and $cline =~ /^$/);	# Ignore leading blank lines
       $seen_text = 1;
       push @$commenttext, $cline;
     }
+
+    die "EOF inside a comment block\n" if eof(STDIN) and $seen_text ne 2;
   }
 
   else { die "Unknown directive in: $line\n"; }
