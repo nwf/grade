@@ -93,7 +93,11 @@ sub doDing($) { # {{{
       } else {
         $dingsum += $1;
       }
-      push @$dingtext, "($1)";
+      # If the section has point value, label the deduction here
+      # with its value.  Zero-point sections don't merit the clutter.
+      if ($secmax != 0) {
+        push @$dingtext, "($1)";
+      }
       untilDefinesDot(sub ($) { push @$dingtext, @_; });
       push @$dingtext, "";
       return;
