@@ -147,7 +147,7 @@ sub finishOverall() { # {{{
 } # }}}
 # Main dispatch {{{
 while(my $line = <STDIN>) {
-  $line =~ s/#.*$//;    # trim line comments
+  $line =~ s/\s*#.*$//;    # trim line comments
   next if ($line =~ /^\s*$/) ;
   chomp $line;
 
