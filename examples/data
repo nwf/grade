@@ -1,0 +1,34 @@
+#
+@packaging
+#:ftbfs_all
+
+$BEGIN_COMMENTS
+Some grader comments on packaging
+$END_COMMENTS
+
+@tests
+
+:simple_test
+:more_interesting_test_minor
+
+# Note that this is OK to use twice:
+:misc_ding
+:misc_ding
+
+# But uncommenting this would give an error!
+# :simple_test
+
+$BEGIN_COMMENTS
+More grader comments in a different section
+$END_COMMENTS
+
+# If we un-commented this line, it would result in a duplicate
+# section error!
+#@tests
+
+# If we had this, we'd get an unknown section error
+#@foo
+
+@tests2
+:some_other_test
+#:yet_another_test
