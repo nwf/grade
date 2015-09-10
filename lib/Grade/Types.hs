@@ -18,6 +18,15 @@ import           Data.Typeable (Typeable)
 newtype DingName = DN { unDN :: Text }
  deriving (Eq,Ord,Show,Typeable)
 
+-- | Things common to dings between their definition and
+-- their use
+data DingMeta mt = DingMeta
+  { _dm_mod  :: mt
+  , _dm_text :: Text
+  }
+ deriving(Eq,Ord,Typeable)
+$(LTH.makeLenses ''DingMeta)
+
 -- | A point deduction definition
 --
 -- A Ding is parameterized by some modifier for its section.
@@ -27,15 +36,14 @@ newtype DingName = DN { unDN :: Text }
 -- Each Ding is associated with a location (parameterized to avoid
 -- dependency on any particular parsing framework)
 --
-data Ding mt loc = Ding
-  { _ding_mod           :: mt
-  , _ding_loc           :: loc
-  , _ding_multiple      :: Bool
-  , _ding_text          :: Text
-  , _ding_comment_lines :: [Text]
+data DingDefn mt loc = DingDefn
+  { _dingd_meta          :: DingMeta mt
+  , _dingd_loc           :: loc
+  , _dingd_multiple      :: Bool
+  , _dingd_comment_lines :: [Text]
   }
  deriving (Eq,Ord,{-Show-}Typeable)
-$(LTH.makeLenses ''Ding)
+$(LTH.makeLenses ''DingDefn)
 
 data SecMeta sdt = SecMeta
   { -- | Title of the section as displayed to the user, not
@@ -63,7 +71,7 @@ data Section sdt loc = Sec
   { _sec_meta          :: SecMeta sdt
   , _sec_hidden        :: Bool
   , _sec_comment_lines :: [Text]
-  , _sec_dings         :: Map DingName (Ding sdt loc)
+  , _sec_dings         :: Map DingName (DingDefn sdt loc)
   }
  deriving (Typeable)
 $(LTH.makeLenses ''Section)

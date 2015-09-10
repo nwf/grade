@@ -19,8 +19,8 @@ collectErrors x = case partitionEithers x of
                     (l, _)  -> Left l
 
 lookupSectionDings :: [(DingName, loc)]
-                   -> M.Map DingName (Ding sdt loc')
-                   -> Either [SectionError loc] [(Ding sdt loc', loc)]
+                   -> M.Map DingName (DingDefn sdt loc')
+                   -> Either [SectionError loc] [(DingDefn sdt loc', loc)]
 lookupSectionDings dns0 sm = collectErrors $ flip evalState M.empty $ mapM look dns0
  where
   look (d,loc) = do
@@ -30,7 +30,7 @@ lookupSectionDings dns0 sm = collectErrors $ flip evalState M.empty $ mapM look 
       Nothing -> case M.lookup d sm of
                    Nothing -> return $ Left $ SEUndefinedDing d loc
                    Just dd -> do
-                               when (not $ _ding_multiple dd) $ modify (M.insert d loc)
+                               when (not $ _dingd_multiple dd) $ modify (M.insert d loc)
                                return $ Right (dd,loc)
 
 dingsToScore :: ExSection loc'
@@ -43,15 +43,15 @@ dingsToScore es dns =
                           (\(sc, ds) -> Right (stitle, sc, smax, map dopo ds)))
       $ bimap id (reduce . map fst) $ lookupSectionDings dns sdm
       where
-       reduce ds = (\x -> (x,ds)) <$> (sfn $ mconcat $ map _ding_mod ds)
+       reduce ds = (\x -> (x,ds)) <$> (sfn $ mconcat $ map (_dm_mod . _dingd_meta) ds)
 
-       dopo d = T.unlines $ addMod $ pure $ _ding_text d
+       dopo d = T.unlines $ addMod $ pure $ (_dm_text . _dingd_meta) d
         where
          addMod = if smax == 0.0
                    then id -- Don't print if section is worthless
                    else maybe id -- Don't print if the section chooses to not
                               ((:) . T.cons '(' . flip T.snoc ')' . T.pack) -- Add parens otherwise
-                              (spo (_ding_mod d))
+                              (spo (_dm_mod $ _dingd_meta d))
 
 processDFS :: Defines loc'
            -> DataFileSection loc

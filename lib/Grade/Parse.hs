@@ -60,13 +60,13 @@ untilDotLine = toUtf8 (T.sliced (T.manyTill T.anyChar (T.try $ T.lookAhead end))
 -- any number of "# comment" lines and followed by the ding text, terminated
 -- by a dot line.
 parseDingDefn :: (T.DeltaParsing f, T.LookAheadParsing f)
-              => f (sdt,sds) -> f (DingName, sds, Ding sdt T.Caret)
+              => f (sdt,sds) -> f (DingName, sds, DingDefn sdt T.Caret)
 parseDingDefn dl = do
   (dcs, reuse) <- T.try ((,) <$> many (hashComment) <*> leadchar)
   dn T.:^ c <- T.careted (DN <$> word)
   (dm, ds) <- dl
   dt <- untilDotLine
-  pure (dn, ds, Ding dm c reuse dt dcs)
+  pure (dn, ds, DingDefn (DingMeta dm dt) c reuse dcs)
  where
   leadchar = T.choice [ T.char ':' *> pure False
                       , T.char ';' *> pure True
