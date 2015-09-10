@@ -27,8 +27,8 @@ newtype DingName = DN { unDN :: Text }
 -- Each Ding is associated with a location (parameterized to avoid
 -- dependency on any particular parsing framework)
 --
-data Ding sdt loc = Ding
-  { _ding_mod           :: sdt
+data Ding mt loc = Ding
+  { _ding_mod           :: mt
   , _ding_loc           :: loc
   , _ding_multiple      :: Bool
   , _ding_text          :: Text
@@ -36,6 +36,21 @@ data Ding sdt loc = Ding
   }
  deriving (Eq,Ord,{-Show-}Typeable)
 $(LTH.makeLenses ''Ding)
+
+data SecMeta sdt = SecMeta
+  { -- | Title of the section as displayed to the user, not
+    -- necessarily the internal name
+    _sm_title         :: Text
+  , -- | Maximum score
+    _sm_max           :: Double
+  , -- | Given a reduced sdsdum, format the score for presentation
+    -- or indicate that there has been an error.
+    _sm_scorefn       :: sdt -> Either String Double
+  , -- | Provide text for printing out the impact of a particular
+    -- score adjustment.
+    _sm_dingprinter   :: sdt -> Maybe String
+  }
+$(LTH.makeLenses ''SecMeta)
 
 -- | A Section is mostly a collection of Dings.
 --
@@ -45,13 +60,10 @@ $(LTH.makeLenses ''Ding)
 -- It also conains a section scoring function, which
 -- reduces dingmods to a score.
 data Section sdt loc = Sec
-  { _sec_title         :: Text
-  , _sec_max           :: Double
+  { _sec_meta          :: SecMeta sdt
   , _sec_hidden        :: Bool
-  , _sec_scorefn       :: sdt -> Either String Double
-  , _sec_dingprinter   :: sdt -> Maybe String
-  , _sec_dings         :: Map DingName (Ding sdt loc)
   , _sec_comment_lines :: [Text]
+  , _sec_dings         :: Map DingName (Ding sdt loc)
   }
  deriving (Typeable)
 $(LTH.makeLenses ''Section)

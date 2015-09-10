@@ -23,7 +23,7 @@ makeSkel :: Defines loc -> Doc e
 makeSkel (Defs sm) =
   vcat $ punctuate line
   $ flip fmap (M.toList sm)
-  $ \(sn, (ExSec (Sec _ _ shidden _ _ sdm scl), _)) ->
+  $ \(sn, (ExSec (Sec _ shidden scl sdm), _)) ->
     let scl' = interpSectionComments shidden scl in
     if shidden
      then scl'

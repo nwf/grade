@@ -38,7 +38,7 @@ dingsToScore :: ExSection loc'
              -> Either [SectionError loc] (T.Text, Double, Double, [T.Text])
 dingsToScore es dns =
   case es of
-    ExSec (Sec stitle smax _ sfn spo sdm _) -> 
+    ExSec (Sec (SecMeta stitle smax sfn spo) _ _ sdm) ->
       either Left (either (Left . pure . SEScoreError)
                           (\(sc, ds) -> Right (stitle, sc, smax, map dopo ds)))
       $ bimap id (reduce . map fst) $ lookupSectionDings dns sdm

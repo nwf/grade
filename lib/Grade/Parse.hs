@@ -40,6 +40,8 @@ hashComment :: T.DeltaParsing f => f Text
 hashComment = toUtf8 (T.sliced (T.char '#' *> many (T.noneOf "\r\n"))) <* T.whiteSpace
 -- hashComment = T.sliced (T.char '#' *> T.manyTill T.anyChar T.newline) <* T.whiteSpace
 
+-- | Grab a word in its entirety.  Note that this is a little strange as
+-- we check the 'notFollowedBy' condition *first*!
 word :: (T.DeltaParsing f) => f Text
 word = toUtf8 (T.sliced (many $ T.satisfy (not . C.isSpace))) <* T.whiteSpace
 
@@ -86,7 +88,7 @@ parseSectionDefn fsdap = do
     SC fsdt sdpo sfn smaxfn -> do
       (sstate, sdings) <- getDings fsdt M.empty
       return (sname, c, ExSec $
-               Sec stitle (smaxfn sstate) shidden (sfn sstate) (sdpo sstate) sdings scs)
+               Sec (SecMeta stitle (smaxfn sstate) (sfn sstate) (sdpo sstate)) shidden scs sdings)
  where
   getDings sdp = go mempty
    where
