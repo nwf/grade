@@ -95,7 +95,7 @@ parseDingDefn dl = do
 
 
 parseSectionDefn :: (T.DeltaParsing f, T.MarkParsing T.Delta f, T.Errable f, T.LookAheadParsing f)
-                 => f (SecCallback f) -> f (SecName, ExSection T.Caret)
+                 => f (ExSecCallback f) -> f (SecName, ExSection f T.Caret)
 parseSectionDefn fsdap = do
   scs <- many hashComment
   _ T.:^ c <- T.careted (T.symbolic '@')
@@ -106,18 +106,18 @@ parseSectionDefn fsdap = do
   stitle  <- toUtf8 (T.sliced (T.manyTill T.anyChar (T.lookAhead T.newline)))
   _       <- T.newline
   case esdp of
-    SC fsdt sdpo sfn smaxfn -> do
+    ExSecCB (SC mfss fsdt sdpo sfn smaxfn) -> do
       (sstate, sdings) <- getDings fsdt M.empty
       _ <- T.whiteSpace
       return (sname, ExSec $
-               Sec (SecMeta stitle (smaxfn sstate) (sfn sstate) (sdpo sstate)) c shidden scs sdings)
+               Sec (SecMeta stitle (smaxfn sstate) (sfn sstate) (sdpo sstate)) c shidden scs sdings mfss)
  where
-  getDings sdp = go mempty
+  getDings fsdt = go mempty
    where
     go s m = nextDing s m <|> return (s,m)
 
     nextDing s m = do
-     (dn, ds, db) <- parseDingDefn sdp
+     (dn, ds, db) <- parseDingDefn fsdt
      case M.lookup dn m of
        Nothing -> go (s `mappend` ds) (M.insert dn db m)
        Just _ -> do
@@ -125,7 +125,7 @@ parseSectionDefn fsdap = do
 
 -- | Parse a definitions file
 parseDefns :: (T.DeltaParsing f, T.MarkParsing T.Delta f, T.Errable f, T.LookAheadParsing f)
-           => f (SecCallback f) -> f (Defines T.Caret)
+           => f (ExSecCallback f) -> f (Defines f T.Caret)
 parseDefns sectys = T.whiteSpace *> go M.empty [] <* T.eof
   where
    go m l = nextSection m l <|> return (Defs m (reverse l))
@@ -142,7 +142,7 @@ parseDefns sectys = T.whiteSpace *> go M.empty [] <* T.eof
 
 -- | Parse a grader data file
 parseData :: forall f loc . (T.DeltaParsing f, T.LookAheadParsing f)
-          => Defines loc -> f (DataFile T.Caret, [ReportError T.Caret])
+          => Defines f loc -> f (DataFile T.Caret, [ReportError T.Caret])
 parseData defs = do
   _         <- T.whiteSpace
   (ss, fsm) <- sections defs
@@ -159,13 +159,14 @@ parseData defs = do
     another already = do
       (sn,esb) T.:^ sc <- get >>= \sm -> sectionDirective sm
       case esb of
-        ExSec (Sec smeta _ _ _ sdm) -> do
+        ExSec (Sec smeta _ _ _ sdm (_,fsat)) -> do
+          sat <- lift fsat
           ds  <- sectionDings sdm
           mcs <- T.optional $
                     T.string commentStart *> T.newline *>
                     toUtf8 (T.sliced (T.manyTill T.anyChar (T.lookAhead cend))) <* cend
           _   <- T.whiteSpace
-          ((sn, ExDFS $ DFS smeta sc ds mcs) :)
+          ((sn, ExDFS $ DFS smeta sat sc ds mcs) :)
             <$> (modify (M.delete sn) >> go (M.insert sn () already))
 
     cend = T.string commentEnd *> T.newline

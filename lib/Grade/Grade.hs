@@ -18,8 +18,8 @@ collectErrors x = case partitionEithers x of
 
 processDFS :: ExDFS loc
            -> Either String ReportFileSection
-processDFS (ExDFS (DFS (SecMeta stitle smax sfn sdpo) _ dds dgcs)) = do
-  sscore <- sfn $ mconcat $ (_dm_mod . _dfd_meta) <$> dds
+processDFS (ExDFS (DFS (SecMeta stitle smax sfn sdpo) sat _ dds dgcs)) = do
+  sscore <- sfn sat $ mconcat $ (_dm_mod . _dfd_meta) <$> dds
   pure $ RFS stitle sscore smax (dopo <$> dds) dgcs
  where
   dopo d = T.unlines $ addMod $ pure $ (_dm_text . _dfd_meta) d
@@ -28,9 +28,9 @@ processDFS (ExDFS (DFS (SecMeta stitle smax sfn sdpo) _ dds dgcs)) = do
               then id -- Don't print if section is worthless
               else maybe id -- Don't print if the section chooses to not
                          ((:) . T.cons '(' . flip T.snoc ')' . T.pack) -- Add parens otherwise
-                         (sdpo (_dm_mod $ _dfd_meta d))
+                         (sdpo sat (_dm_mod $ _dfd_meta d))
 
-gradeOne :: Defines loc' -> DataFile loc -> Either [ReportError loc] ReportFile
+gradeOne :: Defines f loc' -> DataFile loc -> Either [ReportError loc] ReportFile
 gradeOne (Defs defs _) (DF dfss) =
   let availScores  = collectErrors $ fmap processSec dfss in
   let residualSecs = M.keysSet $ foldr (\(k,_) f -> (M.delete k) . f) id dfss defs in

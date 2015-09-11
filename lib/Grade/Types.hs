@@ -45,7 +45,7 @@ data DingDefn mt loc = DingDefn
  deriving (Eq,Ord,{-Show-}Typeable)
 $(LTH.makeLenses ''DingDefn)
 
-data SecMeta sdt = SecMeta
+data SecMeta sat sdt = SecMeta
   { -- | Title of the section as displayed to the user, not
     -- necessarily the internal name
     _sm_title         :: Text
@@ -53,10 +53,10 @@ data SecMeta sdt = SecMeta
     _sm_max           :: Double
   , -- | Given a reduced sdsdum, format the score for presentation
     -- or indicate that there has been an error.
-    _sm_scorefn       :: sdt -> Either String Double
+    _sm_scorefn       :: sat -> sdt -> Either String Double
   , -- | Provide text for printing out the impact of a particular
     -- score adjustment.
-    _sm_dingprinter   :: sdt -> Maybe String
+    _sm_dingprinter   :: sat -> sdt -> Maybe String
   }
 $(LTH.makeLenses ''SecMeta)
 
@@ -67,12 +67,13 @@ $(LTH.makeLenses ''SecMeta)
 --
 -- It also conains a section scoring function, which
 -- reduces dingmods to a score.
-data Section sdt loc = Sec
-  { _sec_meta          :: SecMeta sdt
+data Section f sat sdt loc = Sec
+  { _sec_meta          :: SecMeta sat sdt
   , _sec_loc           :: loc
   , _sec_hidden        :: Bool
   , _sec_comment_lines :: [Text]
   , _sec_dings         :: Map DingName (DingDefn sdt loc)
+  , _sec_datline_parse :: (Maybe String, f sat)
   }
  deriving (Typeable)
 $(LTH.makeLenses ''Section)
@@ -89,7 +90,7 @@ instance (Show sdt, Show loc) => Show (Section sdt loc) where
 -}
 
 -- | Existentially quantify the section data type for a given section
-data ExSection loc = forall sdt . ({-Show sdt,-} Monoid sdt) => ExSec (Section sdt loc)
+data ExSection f loc = forall sat sdt . ({-Show sdt,-} Monoid sdt) => ExSec (Section f sat sdt loc)
 
 {-
 instance (Show loc) => Show (ExSection loc) where
@@ -97,19 +98,28 @@ instance (Show loc) => Show (ExSection loc) where
 -}
 
 -- | A Section Callback object, as returned by a section type parser
-data SecCallback f = forall sps sdt . ({-Show sdt,-} Monoid sdt, Monoid sps) => SC
-  { -- | Parse section-specific ding weights
+data SecCallback f sps sat sdt = SC
+  { -- | Section header parser for data file.  This allows one to
+    -- have sections whose score is influenced by the @-line in the
+    -- *data* file.
+    --
+    -- The String is for use by the skeleton generator.
+    sc_datline_parse :: (Maybe String, f sat)
+  , -- | Parse section-specific ding weights
     sc_ding_parse    :: f (sdt,sps)
   , -- | Optional printout of the sdt data, given
     -- the section's final sps.
-    sc_show_sdt      :: sps -> sdt -> Maybe String
+    sc_show_sdt      :: sps -> sat -> sdt -> Maybe String
   , -- | Scoring function, given section maximum
     -- value and the monoidal summary of section-specific dings
-    sc_score         :: sps -> sdt -> Either String Double
+    sc_score         :: sps -> sat -> sdt -> Either String Double
   , -- | Maximum scoring function
     sc_max           :: sps -> Double
   }
  deriving (Typeable)
+
+data ExSecCallback f = forall sps sat sdt . ({-Show sdt,-} Monoid sdt, Monoid sps)
+                     => ExSecCB (SecCallback f sps sat sdt)
 
 newtype SecName = SN { unSN :: Text }
  deriving (Eq,Ord,Show,Typeable)
@@ -119,9 +129,9 @@ newtype SecName = SN { unSN :: Text }
 --
 -- The same collection is indexed by name and presented in order.
 --
-data Defines loc = Defs
-  { _def_section_by_name :: Map SecName (ExSection loc)
-  , _def_sections        :: [(SecName, ExSection loc)]
+data Defines f loc = Defs
+  { _def_section_by_name :: Map SecName (ExSection f loc)
+  , _def_sections        :: [(SecName, ExSection f loc)]
   }
  deriving ({-Show,-} Typeable)
 $(LTH.makeLenses ''Defines)
@@ -136,8 +146,9 @@ data DataFileDing mt loc = DFD
   }
 $(LTH.makeLenses ''DataFileDing)
 
-data DataFileSection sdt loc = DFS
-  { _dfs_meta            :: SecMeta sdt
+data DataFileSection sat sdt loc = DFS
+  { _dfs_meta            :: SecMeta sat sdt
+  , _dfs_sec_arg         :: sat
   , _dfs_loc             :: loc
   , _dfs_dings           :: [DataFileDing sdt loc]
   , _dfs_grader_comments :: Maybe Text
@@ -145,7 +156,7 @@ data DataFileSection sdt loc = DFS
  deriving (Typeable)
 $(LTH.makeLenses ''DataFileSection)
 
-data ExDFS loc = forall sdt . Monoid sdt => ExDFS (DataFileSection sdt loc)
+data ExDFS loc = forall sat sdt . Monoid sdt => ExDFS (DataFileSection sat sdt loc)
 
 -- | A report for a student, as produced by a TA
 newtype DataFile loc = DF [(SecName, ExDFS loc)]

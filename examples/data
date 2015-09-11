@@ -16,7 +16,7 @@ $END_COMMENTS
 :misc_ding
 
 # But uncommenting this would give an error!
-# :simple_test
+#:simple_test
 
 $BEGIN_COMMENTS
 More grader comments in a different section
@@ -29,6 +29,12 @@ $END_COMMENTS
 # If we had this, we'd get an unknown section error
 #@foo
 
+@justScoreMe 8
+
+$BEGIN_COMMENTS
+abcd
+$END_COMMENTS
+
 @tests2
 :some_other_test
-#:yet_another_test
+:yet_another_test

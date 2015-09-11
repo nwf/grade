@@ -19,6 +19,7 @@ library
                        Grade.Score.Zeroing,
                        Grade.Score.Setting,
                        Grade.Score.Bounding,
+                       Grade.Score.SectionOnly,
                        Grade.Score.Simple,
                        Grade.Score.EqualWeighted,
                        Grade.Score.EqualWeightedCounting,

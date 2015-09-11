@@ -2,7 +2,7 @@
 module Grade.Score.Zeroing (zeroing) where
 
 import qualified Text.Trifecta         as T
-import           Grade.Types (SecCallback(..))
+import           Grade.Types (ExSecCallback(..), SecCallback(..))
 
 data Zeroing a = Zeroed | Earned a
  deriving (Show)
@@ -25,23 +25,24 @@ parseZeroed pz pd = T.choice
     (\(a,b) -> (Earned a, b)) <$> pd
   ]
 
-printZeroed :: (sds -> sdt -> Maybe String)
-            -> sds -> Zeroing sdt -> Maybe String
-printZeroed po ss r = case r of
-                        Zeroed   -> Just "Score set to 0"
-                        Earned v -> po ss v
+printZeroed :: (sds -> sat -> sdt -> Maybe String)
+            -> sds -> sat -> Zeroing sdt -> Maybe String
+printZeroed po ss sa r = case r of
+                          Zeroed   -> Just "Score set to 0"
+                          Earned v -> po ss sa v
 
-scoreZeroed :: (sds -> sdt -> Either String Double)
-            -> sds -> Zeroing sdt -> Either String Double
-scoreZeroed ug ss r = case r of
-                         Zeroed    -> Right 0.0
-                         Earned r' -> ug ss r'
+scoreZeroed :: (sds -> sat -> sdt -> Either String Double)
+            -> sds -> sat -> Zeroing sdt -> Either String Double
+scoreZeroed ug ss sa r = case r of
+                           Zeroed    -> Right 0.0
+                           Earned r' -> ug ss sa r'
 
-zeroing :: (T.TokenParsing f) => f () -> SecCallback f -> SecCallback f
+zeroing :: (T.TokenParsing f) => f () -> ExSecCallback f -> ExSecCallback f
 zeroing pz shp = 
   case shp of
-    SC up uo ug um ->
-      SC (parseZeroed pz up)
-         (printZeroed uo)
-         (scoreZeroed ug)
-         um
+    ExSecCB (SC us up uo ug um) ->
+      ExSecCB (SC us
+                  (parseZeroed pz up)
+                  (printZeroed uo)
+                  (scoreZeroed ug)
+                  um)

@@ -24,7 +24,7 @@ import qualified Grade.Score.Bounding       as GSB
 import qualified Grade.Score.Zeroing        as GSZ
 import           Grade.Types
 
-sectys :: T.TokenParsing m => m (SecCallback m)
+sectys :: T.TokenParsing m => m (ExSecCallback m)
 sectys = T.choice
   [ -- A shortcut
     T.symbolic '0'      *> (GSZ.zeroing zs <$> GSB.bounding GSB.Both <$> GSS.sectySimple)

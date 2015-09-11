@@ -19,16 +19,16 @@ interpSectionComments f0 = vcat . go f0
   go False (b:bs)                         = pretty b : go False bs
   go True  (_:bs)                         = go True bs
 
-makeSkel :: Defines loc -> Doc e
+makeSkel :: Defines f loc -> Doc e
 makeSkel (Defs _ sl) =
   vcat $ punctuate line
   $ flip fmap sl
-  $ \(sn, ExSec (Sec _ _ shidden scl sdm)) ->
+  $ \(sn, ExSec (Sec _ _ shidden scl sdm msh)) ->
     let scl' = interpSectionComments shidden scl in
     if shidden
      then scl'
      else scl'
-          `above` "@" <> pretty (unSN sn)
+          `above` "@" <> pretty (unSN sn) <> maybe empty ((empty <+>) . pretty) (fst msh)
           `above` prettyDingMap sdm (vcat [empty, commentStart, empty, commentEnd])
 
  where

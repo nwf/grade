@@ -9,7 +9,7 @@ module Grade.Score.Simple (sectySimple) where
 
 import           Numeric
 import qualified Text.Trifecta         as T
-import           Grade.Types (SecCallback(..))
+import           Grade.Types (ExSecCallback(..), SecCallback(..))
 
 data Score = S Double Double
  deriving (Show)
@@ -33,22 +33,26 @@ parseDingScore = (\x -> (x,())) <$> T.choice
 impact :: Double -> Score -> Double
 impact sm (S a r) = a + (sm * r)
 
-printfn :: Double -> () -> Score -> Maybe String
-printfn sm () s = Just $ case s of
-                           (S 0.0 0.0) -> "0"
-                           (S 0.0 r) -> (p (r*100)) ++ "% == " ++ si
-                           (S _ 0.0) -> si
-                           (S a r  ) -> (p a) ++ " and " ++ (p r) ++ "% == " ++ si
+printfn :: Double -> () -> () -> Score -> Maybe String
+printfn sm () () s = Just $ case s of
+                              (S 0.0 0.0) -> "0"
+                              (S 0.0 r) -> (p (r*100)) ++ "% == " ++ si
+                              (S _ 0.0) -> si
+                              (S a r  ) -> (p a) ++ " and " ++ (p r) ++ "% == " ++ si
  where
   si = p $ impact sm s
   p x = showFFloat (Just 1) x ""
 
-scorefn :: Double -> () -> Score -> Either String Double
-scorefn sm () s = Right $ sm + impact sm s
+scorefn :: Double -> () -> () -> Score -> Either String Double
+scorefn sm () () s = Right $ sm + impact sm s
 
-sectySimple :: (T.TokenParsing f) => f (SecCallback f)
-sectySimple = (\smax -> SC parseDingScore
-                           (printfn smax)
-                           (scorefn smax)
-                           (\_ -> smax))
-              <$> efid
+sectySimple_ :: (T.TokenParsing f) => f (SecCallback f () () Score)
+sectySimple_ = (\smax -> SC (Nothing, pure ())
+                            parseDingScore
+                            (printfn smax)
+                            (scorefn smax)
+                            (\_ -> smax))
+               <$> efid
+
+sectySimple :: (T.TokenParsing f) => f (ExSecCallback f)
+sectySimple = ExSecCB <$> sectySimple_

@@ -5,7 +5,7 @@ module Grade.Score.Setting (sectySetting) where
 
 import           Numeric
 import qualified Text.Trifecta         as T
-import           Grade.Types (SecCallback(..))
+import           Grade.Types (ExSecCallback(..), SecCallback(..))
 
 data Setting a = SetTwice | Set Double | Earned a
  deriving (Show)
@@ -33,19 +33,19 @@ parseSet ps pd = T.choice
     (\(a,b) -> (Earned a, b)) <$> pd
   ]
 
-printSet :: (sds -> sdt -> Maybe String)
-         -> sds -> Setting sdt -> Maybe String
-printSet po ss r = case r of
-                     SetTwice -> error "Score.Setting was asked to print out impossible state"
-                     Set v    -> Just $ showFFloat (Just 1) v "Score set to "
-                     Earned v -> po ss v
+printSet :: (sds -> sat -> sdt -> Maybe String)
+         -> sds -> sat -> Setting sdt -> Maybe String
+printSet po ss sa r = case r of
+                        SetTwice -> error "Score.Setting was asked to print out impossible state"
+                        Set v    -> Just $ showFFloat (Just 1) v "Score set to "
+                        Earned v -> po ss sa v
 
-scoreSet :: (sds -> sdt -> Either String Double)
-         -> sds -> Setting sdt -> Either String Double
-scoreSet ug ss r = case r of
-                     SetTwice  -> Left "Multiple score-setting dings in section"
-                     Set v     -> Right v
-                     Earned r' -> ug ss r'
+scoreSet :: (sds -> sat -> sdt -> Either String Double)
+         -> sds -> sat -> Setting sdt -> Either String Double
+scoreSet ug ss sa r = case r of
+                        SetTwice  -> Left "Multiple score-setting dings in section"
+                        Set v     -> Right v
+                        Earned r' -> ug ss sa r'
 
-sectySetting :: (T.TokenParsing f) => f Double -> SecCallback f -> SecCallback f
-sectySetting ps (SC up uo ug um) = SC (parseSet ps up) (printSet uo) (scoreSet ug) um
+sectySetting :: (T.TokenParsing f) => f Double -> ExSecCallback f -> ExSecCallback f
+sectySetting ps (ExSecCB (SC uh up uo ug um)) = ExSecCB (SC uh (parseSet ps up) (printSet uo) (scoreSet ug) um)
