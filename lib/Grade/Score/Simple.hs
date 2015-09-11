@@ -47,4 +47,8 @@ scorefn :: Double -> () -> Score -> Either String Double
 scorefn sm () s = Right $ sm + impact sm s
 
 sectySimple :: (T.TokenParsing f) => f (SecCallback f)
-sectySimple = (\smax -> SC parseDingScore (printfn smax) (scorefn smax) (\_ -> smax)) <$> efid
+sectySimple = (\smax -> SC parseDingScore
+                           (printfn smax)
+                           (scorefn smax)
+                           (\_ -> smax))
+              <$> efid

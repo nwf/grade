@@ -69,6 +69,7 @@ $(LTH.makeLenses ''SecMeta)
 -- reduces dingmods to a score.
 data Section sdt loc = Sec
   { _sec_meta          :: SecMeta sdt
+  , _sec_loc           :: loc
   , _sec_hidden        :: Bool
   , _sec_comment_lines :: [Text]
   , _sec_dings         :: Map DingName (DingDefn sdt loc)
@@ -96,18 +97,17 @@ instance (Show loc) => Show (ExSection loc) where
 -}
 
 -- | A Section Callback object, as returned by a section type parser
-data SecCallback f = forall sps sdt . ({-Show sdt,-} Monoid sdt, Monoid sps) =>
-  SC
+data SecCallback f = forall sps sdt . ({-Show sdt,-} Monoid sdt, Monoid sps) => SC
   { -- | Parse section-specific ding weights
-    sc_ding_parse :: f (sdt,sps)
+    sc_ding_parse    :: f (sdt,sps)
   , -- | Optional printout of the sdt data, given
-    -- the section's maximum and final sps.
-    sc_show_sdt :: sps -> sdt -> Maybe String
+    -- the section's final sps.
+    sc_show_sdt      :: sps -> sdt -> Maybe String
   , -- | Scoring function, given section maximum
     -- value and the monoidal summary of section-specific dings
-    sc_score :: sps -> sdt -> Either String Double
+    sc_score         :: sps -> sdt -> Either String Double
   , -- | Maximum scoring function
-    sc_max :: sps -> Double
+    sc_max           :: sps -> Double
   }
  deriving (Typeable)
 
@@ -117,8 +117,11 @@ newtype SecName = SN { unSN :: Text }
 -- | Defines is a collection of Sections, with possibly different types of
 -- scoring data in each.
 --
+-- The same collection is indexed by name and presented in order.
+--
 data Defines loc = Defs
-  { _def_sections :: Map SecName (ExSection loc, loc)
+  { _def_section_by_name :: Map SecName (ExSection loc)
+  , _def_sections        :: [(SecName, ExSection loc)]
   }
  deriving ({-Show,-} Typeable)
 $(LTH.makeLenses ''Defines)
@@ -126,18 +129,27 @@ $(LTH.makeLenses ''Defines)
 ------------------------------------------------------------------------ }}}
 -- Data ---------------------------------------------------------------- {{{
 
-data DataFileSection loc = DFS
-  { _dfs_secname         :: SecName
-  , _dfs_secloc          :: loc
-  , _dfs_dings           :: [(DingName,loc)]
+-- | Ding usage by a grader
+data DataFileDing mt loc = DFD
+  { _dfd_meta          :: DingMeta mt
+  , _dfd_loc           :: loc
+  }
+$(LTH.makeLenses ''DataFileDing)
+
+data DataFileSection sdt loc = DFS
+  { _dfs_meta            :: SecMeta sdt
+  , _dfs_loc             :: loc
+  , _dfs_dings           :: [DataFileDing sdt loc]
   , _dfs_grader_comments :: Maybe Text
   }
- deriving (Show, Typeable)
+ deriving (Typeable)
 $(LTH.makeLenses ''DataFileSection)
 
+data ExDFS loc = forall sdt . Monoid sdt => ExDFS (DataFileSection sdt loc)
+
 -- | A report for a student, as produced by a TA
-newtype DataFile loc = DF [DataFileSection loc]
- deriving (Show, Typeable)
+newtype DataFile loc = DF [(SecName, ExDFS loc)]
+ deriving (Typeable)
 
 ------------------------------------------------------------------------ }}}
 -- Reports ------------------------------------------------------------- {{{

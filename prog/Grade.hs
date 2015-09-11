@@ -14,25 +14,25 @@ import qualified System.Console.CmdLib        as C
 import           System.IO
 
 import           Grade.Parse
-import           Grade.Score.EqualWeighted
-import           Grade.Score.Simple
-import qualified Grade.Score.Bounding       as GSB
-import qualified Grade.Score.Zeroing        as GSZ
 import           Grade.Grade
 import           Grade.Skeleton
 import           Grade.Print
 
----
+import qualified Grade.Score.EqualWeighted  as GSE
+import qualified Grade.Score.Simple         as GSS
+import qualified Grade.Score.Bounding       as GSB
+import qualified Grade.Score.Zeroing        as GSZ
+import           Grade.Types
 
 sectys :: T.TokenParsing m => m (SecCallback m)
 sectys = T.choice
   [ -- A shortcut
-    T.symbolic '0'      *> (GSZ.zeroing zs <$> GSB.bounding GSB.Both <$> sectySimple)
+    T.symbolic '0'      *> (GSZ.zeroing zs <$> GSB.bounding GSB.Both <$> GSS.sectySimple)
 
   , -- Look ma, a little language
     -- Base cases
-    T.symbol "simple"   *> sectySimple
-  , T.symbol "equal"    *> sectyEqualWeighted
+    T.symbol "simple"   *> GSS.sectySimple
+  , T.symbol "equal"    *> GSE.sectyEqualWeighted
 
   , -- Recursive cases
     T.symbol "bounding" *> (GSB.bounding GSB.Both <$> sectys)
@@ -41,6 +41,8 @@ sectys = T.choice
   ]
  where
   zs = T.symbol "!0" *> pure ()
+
+---
 
 doMakeSkeleton :: String -> IO ()
 doMakeSkeleton defi = do
@@ -56,16 +58,22 @@ doGradeOne defi dati = do
     T.Failure f -> hPutStrLn stderr "Error while parsing defines:"
                    *> hPutStrLn stderr (show f)
     T.Success defs -> do
-      mdata <- T.parseFromFileEx parseData dati
+      mdata <- T.parseFromFileEx (parseData defs) dati
       case mdata of
         T.Failure f -> hPutStrLn stderr "Error while parsing data:"
                        *> hPutStrLn stderr (show f)
-        T.Success dats -> case gradeOne defs dats of
-                            Left e -> do
-                                       hPutStrLn stderr "Error while grading:"
-                                       hPutStrLn stderr $ show $ PP.vcat 
-                                                        $ map (printReportError showcaret) e
-                            Right r -> print $ printReport r
+        T.Success (dats, errs) -> case errs of
+                                    [] -> case gradeOne defs dats of
+                                            Left e -> do
+                                                       hPutStrLn stderr "Error while grading:"
+                                                       hPutStrLn stderr $ show $ PP.vcat
+                                                                        $ map (printReportError showcaret) e
+                                            Right r -> print $ printReport r
+                                    _  -> do
+                                           hPutStrLn stderr "Error while parsing data:"
+                                           hPutStrLn stderr $ show $ PP.vcat
+                                                            $ map (printReportError showcaret) errs
+
   where
    showcaret = PP.text . show . TPP.pretty . T.delta
 

@@ -39,4 +39,9 @@ scoreZeroed ug ss r = case r of
 
 zeroing :: (T.TokenParsing f) => f () -> SecCallback f -> SecCallback f
 zeroing pz shp = 
-  case shp of SC up uo ug um -> SC (parseZeroed pz up) (printZeroed uo) (scoreZeroed ug) um
+  case shp of
+    SC up uo ug um ->
+      SC (parseZeroed pz up)
+         (printZeroed uo)
+         (scoreZeroed ug)
+         um

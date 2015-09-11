@@ -20,18 +20,20 @@ interpSectionComments f0 = vcat . go f0
   go True  (_:bs)                         = go True bs
 
 makeSkel :: Defines loc -> Doc e
-makeSkel (Defs sm) =
+makeSkel (Defs _ sl) =
   vcat $ punctuate line
-  $ flip fmap (M.toList sm)
-  $ \(sn, (ExSec (Sec _ shidden scl sdm), _)) ->
+  $ flip fmap sl
+  $ \(sn, ExSec (Sec _ _ shidden scl sdm)) ->
     let scl' = interpSectionComments shidden scl in
     if shidden
      then scl'
      else scl'
           `above` "@" <> pretty (unSN sn)
-          `above` indent 1 (vcat $ map prettyDing (M.toList sdm))
-          `above` vcat [empty, commentStart, empty, commentEnd]
+          `above` prettyDingMap sdm (vcat [empty, commentStart, empty, commentEnd])
 
  where
-  prettyDing (dn, _) = "#:" <> pretty (unDN dn)
+  prettyDingMap dm = if M.null dm
+                      then id
+                      else (indent 1 (vcat $ map prettyDing (M.toList dm)) `above`)
 
+  prettyDing (dn, _) = "#:" <> pretty (unDN dn)

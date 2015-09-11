@@ -24,10 +24,10 @@ impact smax ntotal ndinged = smax / fis ntotal * fis ndinged
 
 printDing :: Double -> Sum Int -> Sum Int -> Maybe String
 printDing smax ntotal ding = assert (getSum ding == 1)
-                             $ Just (showFFloat (Just 1) (0.0 - impact smax ntotal ding) "") 
+                           $ Just (showFFloat (Just 1) (0.0 - impact smax ntotal ding) "")
 
 scorefn :: Double -> Sum Int -> Sum Int -> Either String Double
 scorefn smax ntotal ndinged = Right $ smax - impact smax ntotal ndinged
 
-sectyEqualWeighted :: (T.TokenParsing f) => f (SecCallback f)
+sectyEqualWeighted :: (T.TokenParsing f) => f (SecCallback f) 
 sectyEqualWeighted = (\smax -> SC parseDing (printDing smax) (scorefn smax) (\_ -> smax)) <$> efid

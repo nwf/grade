@@ -47,6 +47,5 @@ scoreSet ug ss r = case r of
                      Set v     -> Right v
                      Earned r' -> ug ss r'
 
-sectySetting :: (T.TokenParsing f) => f Double -> f (SecCallback f) -> f (SecCallback f)
-sectySetting ps = fmap
-  (\shp -> case shp of SC up uo ug um -> SC (parseSet ps up) (printSet uo) (scoreSet ug) um)
+sectySetting :: (T.TokenParsing f) => f Double -> SecCallback f -> SecCallback f
+sectySetting ps (SC up uo ug um) = SC (parseSet ps up) (printSet uo) (scoreSet ug) um

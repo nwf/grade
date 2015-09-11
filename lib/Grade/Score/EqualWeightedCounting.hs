@@ -18,7 +18,7 @@ fis :: Sum Int -> Double
 fis = fromIntegral . getSum
 
 printDing :: Sum Int -> Sum Int -> Maybe String
-printDing _ ding = assert (getSum ding == 1) $ Just "-1" 
+printDing _ ding = assert (getSum ding == 1) $ Just "-1"
 
 scorefn :: Sum Int -> Sum Int -> Either String Double
 scorefn ntotal ndinged = Right $ fis $ ntotal - ndinged
