@@ -20,27 +20,35 @@ import           Grade.Print
 
 import qualified Grade.Score.EqualWeighted  as GSE
 import qualified Grade.Score.Simple         as GSS
+import qualified Grade.Score.SectionOnly    as GSSO
 import qualified Grade.Score.Bounding       as GSB
+import qualified Grade.Score.Commenting     as GSC
 import qualified Grade.Score.Zeroing        as GSZ
 import           Grade.Types
 
 sectys :: T.TokenParsing m => m (ExSecCallback m)
 sectys = T.choice
   [ -- A shortcut
-    T.symbolic '0'      *> (GSZ.zeroing zs <$> GSB.bounding GSB.Both <$> GSS.sectySimple)
+    T.symbolic '0'      *> (    GSZ.zeroing zs
+                            <$> GSB.bounding GSB.Both
+                            <$> GSC.commenting cs
+                            <$> GSS.sectySimple)
 
   , -- Look ma, a little language
     -- Base cases
     T.symbol "simple"   *> GSS.sectySimple
   , T.symbol "equal"    *> GSE.sectyEqualWeighted
+  , T.symbol "seconly"  *> GSSO.sectySectionOnly
 
   , -- Recursive cases
-    T.symbol "bounding" *> (GSB.bounding GSB.Both <$> sectys)
-  , T.symbol "nonneg"   *> (GSB.bounding GSB.Below <$> sectys)
-  , T.symbol "zeroing"  *> (GSZ.zeroing zs <$> sectys)
+    T.symbol "bounding"   *> (GSB.bounding GSB.Both <$> sectys)
+  , T.symbol "nonneg"     *> (GSB.bounding GSB.Below <$> sectys)
+  , T.symbol "commenting" *> (GSC.commenting cs <$> sectys)
+  , T.symbol "zeroing"    *> (GSZ.zeroing zs <$> sectys)
   ]
  where
   zs = T.symbol "!0" *> pure ()
+  cs = T.symbol "!C" *> pure ()
 
 ---
 

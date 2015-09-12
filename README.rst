@@ -128,26 +128,46 @@ where
   from the generated skeleton and this initial ``!`` will be stripped
   from the type before consulting the following choices.
 
-  * The word ``simple`` defines a section of define flags whose invoked
-    scores are simply summed.  ``extra`` here should be the section's
-    maximum value.
+  There are a few base-case scoring engines:
 
-  * The word ``equal`` defines a section of equally-weighted flags; again,
-    ``extra`` should be the section's maximum value.
+    * The word ``simple`` defines a section of define flags whose invoked
+      scores are simply summed.  ``extra`` here should be the section's
+      maximum value.
 
-  * The word ``bounding`` followed by (whitespace and) another ``type`` will
-    behave as that type except that the score will be between zero and that
-    type's derived maximum.  That is, this section will behave as if it had
-    that ``type`` but will yield no scores below zero and no extra credit.
+    * The word ``equal`` defines a section of equally-weighted flags; again,
+      ``extra`` should be the section's maximum value.
 
-  * The word ``nonneg`` bounds the section's score from below at ``0``; that
-    is, it permits extra credit but not extra loss.
+    * The word ``seconly`` defines a section with no flags (unless possibly
+      combined with one of the modifiers below) but instead just takes a
+      literal score after the ``@section`` line in the data file.  (The
+      parser also accepts a literal ``!`` in this position, in which case it
+      will raise an error unless some modifier below overrides the score;
+      this facilitates common rationale text even in this kind of section.)
 
-  * The word ``zeroing`` followed by (whitespace and) another ``type`` will
-    permit the definitions of flags with argument ``!0`` which will set the
-    section score to zero.
+  There are, additionally, some modifiers available:
 
-  * The word ``0`` is a shorthand for ``zeroing bounding simple``.
+    * The word ``bounding`` followed by (whitespace and) another ``type``
+      will behave as that type except that the score will be between zero
+      and that type's derived maximum.  That is, this section will behave as
+      if it had that ``type`` but will yield no scores below zero and no
+      extra credit.
+
+    * The word ``nonneg`` behaves like ``bounding`` but bounds the section's
+      score from below at ``0``; that is, it permits extra credit but not
+      extra loss.
+
+    * The word ``commenting`` followed by (whitespace and) another ``type``
+      will permit the definitions of flags with argument ``!C`` which will
+      not influence the score at all and will not print out a score modifier
+      before the flag text in generated reports.
+
+    * The word ``zeroing`` followed by (whitespace and) another ``type``
+      will permit the definitions of flags with argument ``!0`` which will
+      set the section score to zero.
+
+  Some shorthands are defined:
+
+    * The word ``0`` is a shorthand for ``zeroing bounding commenting simple``.
 
 * ``friendly-name`` is the section heading as presented to students.  It may
   contain spaces, and is in fact the remainder of the @ line.
