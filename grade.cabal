@@ -45,6 +45,8 @@ executable grade
   other-extensions:    CPP
   build-depends:       base >=4.6 && <5,
                        cmdlib >= 0.3 && <1,
+                       directory >= 1.2 && <2,
+                       filepath >= 1.4 && <2,
                        trifecta >=1.5 && <2,
                        ansi-wl-pprint >= 0.6 && <1,
                        wl-pprint-extras >=3.5 && <4,
