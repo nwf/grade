@@ -76,6 +76,7 @@ parseSectionDefn fsdap = do
   _       <- T.symbolic '-'
   stitle  <- toUtf8 (T.sliced (T.manyTill T.anyChar (T.lookAhead T.newline)))
   _       <- T.newline
+  _       <- T.whiteSpace
   case esdp of
     ExSecCB (SC mfss fsdt sdpo sfn smaxfn) -> do
       (sstate, sdings) <- getDings fsdt M.empty
