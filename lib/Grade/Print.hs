@@ -2,7 +2,9 @@
 
 module Grade.Print where
 
+import qualified Data.Char                    as C
 import qualified Data.Set                     as S
+import qualified Data.Text                    as T
 import           Numeric
 import           Text.PrettyPrint.Free
 
@@ -35,14 +37,14 @@ printGrade e t = brackets (p e <> "/" <> p t) <+> parens ((p $ e / t * 100.0) <>
   p x = text $ showFFloat (Just 1) x ""
 
 printSection :: ReportFileSection -> Doc e
-printSection (RFS st ss smax sdc msgc) =
+printSection (RFS st ss smax sdc sgc) =
   pretty st <> ":" <+> printGrade ss smax <> line
   `above` indent 1
     (vcat (punctuate empty (map pretty sdc))
-     <> maybe empty
-              (\x -> (if null sdc then empty else line)
-                     <> "Additional Grader Comments:" <> line `above` indent 1 (pretty x))
-              msgc)
+     <> (if null sdc then empty else line) <> magc sgc)
+ where
+  magc x = if T.any (not . C.isSpace) x then agc x else empty
+  agc x = "Additional Grader Comments:" <> line `above` indent 1 (pretty x)
 
 total :: ReportFile -> (Double,Double)
 total (RF secs) = foldr (\(RFS _ ss sm _ _) (e,t) -> (ss+e,sm+t)) (0.0,0.0) secs

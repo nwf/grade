@@ -137,7 +137,7 @@ parseData defs = do
                     T.string commentStart *> T.newline *>
                     toUtf8 (T.sliced (T.manyTill T.anyChar (T.lookAhead cend))) <* cend
           _   <- T.whiteSpace
-          ((sn, ExDFS $ DFS smeta sat sc ds mcs) :)
+          ((sn, ExDFS $ DFS smeta sat sc ds (maybe "" id mcs)) :)
             <$> (modify (M.delete sn) >> go (M.insert sn () already))
 
     cend = T.string commentEnd *> T.newline

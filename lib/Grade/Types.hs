@@ -151,7 +151,7 @@ data DataFileSection sat sdt loc = DFS
   , _dfs_sec_arg         :: sat
   , _dfs_loc             :: loc
   , _dfs_dings           :: [DataFileDing sdt loc]
-  , _dfs_grader_comments :: Maybe Text
+  , _dfs_grader_comments :: Text
   }
  deriving (Typeable)
 $(LTH.makeLenses ''DataFileSection)
@@ -191,7 +191,7 @@ data ReportFileSection = RFS
   , _rfs_score    :: Double
   , _rfs_max      :: Double
   , _rfs_dingtext :: [Text]
-  , _rfs_comments :: Maybe Text
+  , _rfs_comments :: Text
   }
  deriving (Show, Typeable)
 $(LTH.makeLenses ''ReportFileSection)
