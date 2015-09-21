@@ -50,4 +50,6 @@ total :: ReportFile -> (Double,Double)
 total (RF secs) = foldr (\(RFS _ ss sm _ _) (e,t) -> (ss+e,sm+t)) (0.0,0.0) secs
 
 printReport :: ReportFile -> Doc e
-printReport r@(RF s) = vcat (map printSection s) <> line <> "TOTAL:" <+> (uncurry printGrade $ total r)
+printReport r@(RF s) =
+    vcat (map printSection s) <> line
+ <> "TOTAL:" <+> (uncurry printGrade $ total r) <> line
