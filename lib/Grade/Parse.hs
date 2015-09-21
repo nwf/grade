@@ -15,9 +15,7 @@ import           Control.Applicative
 -- import qualified Control.Lens          as L
 -- import           Control.Monad (guard, when)
 import           Control.Monad.State
-import           Data.ByteString (ByteString)
 import           Data.Text (Text,unpack)
-import           Data.Text.Encoding (decodeUtf8')
 -- import qualified Data.Char             as C
 import qualified Data.Map              as M
 -- import qualified Data.Set              as S
@@ -30,6 +28,7 @@ import qualified Text.Parser.LookAhead as T
 -- import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import Grade.Types
+import Grade.ParseUtils
 
 ------------------------------------------------------------------------ }}}
 -- Common -------------------------------------------------------------- {{{
@@ -37,34 +36,6 @@ import Grade.Types
 commentStart, commentEnd :: (IsString s) => s
 commentStart = "$BEGIN_COMMENTS"
 commentEnd   = "$END_COMMENTS"
-
-toUtf8 :: (Monad f, T.Parsing f) => f ByteString -> f Text
-toUtf8 = (>>= either (\e -> T.unexpected ("Invalid UTF-8: " ++ show e)) (pure) . decodeUtf8')
-
--- | Grab a comment beginning with # and going to end of line.
-hashComment :: T.DeltaParsing f => f Text
-hashComment = toUtf8 (T.sliced (T.char '#' *> many (T.noneOf "\r\n"))) <* T.whiteSpace
--- hashComment = T.sliced (T.char '#' *> T.manyTill T.anyChar T.newline) <* T.whiteSpace
-
--- | Sometimes we want to be more forceful than T.whiteSpace and actually
--- ensure that there is some space or that we're at the end of input.
-sseof :: (T.TokenParsing f) => f ()
-sseof = (T.someSpace <|> T.eof)
-
--- | Grab a word in its entirety.  Note that this is a little strange as
--- we check the 'notFollowedBy' condition *first*!
-word :: (T.DeltaParsing f) => f Text
-word = toUtf8 (T.sliced (many $ T.notFollowedBy T.someSpace *> T.anyChar)) <* sseof
-
--- | Choose by key in a map
-parseMapKeys :: (T.TokenParsing f)
-             => (k -> String)
-             -> M.Map k v
-             -> f (k, v)
-parseMapKeys ks m = T.choice $ (uncurry arm) <$> M.toList m
- where
-  arm k v = ((T.try ((T.string $ ks k) <* sseof)) *> pure (k,v))
-            T.<?> show (ks k)
 
 ------------------------------------------------------------------------ }}}
 -- Defines ------------------------------------------------------------- {{{
