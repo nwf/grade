@@ -79,19 +79,25 @@ parseSectionDefn fsdap = do
   _       <- T.whiteSpace
   case esdp of
     ExSecCB (SC mfss fsdt sdpo sfn smaxfn) -> do
-      (sstate, sdings) <- getDings fsdt M.empty
+      (sstate, sdingsm, revsdings) <- getDings fsdt M.empty []
       _ <- T.whiteSpace
       return (sname, ExSec $
-               Sec (SecMeta stitle (smaxfn sstate) (sfn sstate) (sdpo sstate)) c shidden scs sdings mfss)
+               Sec (SecMeta stitle (smaxfn sstate) (sfn sstate) (sdpo sstate))
+                   c
+                   shidden
+                   scs
+                   sdingsm
+                   (reverse revsdings)
+                   mfss)
  where
   getDings fsdt = go mempty
    where
-    go s m = nextDing s m <|> return (s,m)
+    go s m l = nextDing s m l <|> return (s,m,l)
 
-    nextDing s m = do
+    nextDing s m l = do
      (dn, ds, db) <- parseDingDefn fsdt
      case M.lookup dn m of
-       Nothing -> go (s `mappend` ds) (M.insert dn db m)
+       Nothing -> go (s `mappend` ds) (M.insert dn db m) ((dn,db):l)
        Just _ -> do
          T.raiseErr (T.Err (Just "Duplicate ding definition") [] mempty)
 
@@ -131,7 +137,7 @@ parseData defs = do
     another already = do
       (sn,esb) T.:^ sc <- get >>= \sm -> sectionDirective sm
       case esb of
-        ExSec (Sec smeta _ _ _ sdm (_,fsat)) -> do
+        ExSec (Sec smeta _ _ _ sdm _ (_,fsat)) -> do
           sat <- lift fsat
           ds  <- sectionDings sdm
           mcs <- T.optional $

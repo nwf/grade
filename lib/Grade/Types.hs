@@ -72,7 +72,8 @@ data Section f sat sdt loc = Sec
   , _sec_loc           :: loc
   , _sec_hidden        :: Bool
   , _sec_comment_lines :: [Text]
-  , _sec_dings         :: Map DingName (DingDefn sdt loc)
+  , _sec_ding_by_name  :: Map DingName (DingDefn sdt loc)
+  , _sec_dings         :: [(DingName, DingDefn sdt loc)]
   , _sec_datline_parse :: (Maybe String, f sat)
   }
  deriving (Typeable)

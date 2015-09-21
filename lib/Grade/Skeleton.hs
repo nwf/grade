@@ -23,17 +23,16 @@ makeSkel :: Defines f loc -> Doc e
 makeSkel (Defs _ sl) =
   vcat $ punctuate line
   $ flip fmap sl
-  $ \(sn, ExSec (Sec _ _ shidden scl sdm msh)) ->
+  $ \(sn, ExSec (Sec _ _ shidden scl _ sds msh)) ->
     let scl' = interpSectionComments shidden scl in
     if shidden
      then scl'
      else scl'
           `above` "@" <> pretty (unSN sn) <> maybe empty ((empty <+>) . pretty) (fst msh)
-          `above` prettyDingMap sdm (vcat [empty, commentStart, empty, commentEnd])
+          `above` prettyDings sds (vcat [empty, commentStart, empty, commentEnd])
 
  where
-  prettyDingMap dm = if M.null dm
-                      then id
-                      else (indent 1 (vcat $ map prettyDing (M.toList dm)) `above`)
+  prettyDings [] = id
+  prettyDings ds = (indent 1 (vcat $ map prettyDing ds) `above`)
 
   prettyDing (dn, _) = "#:" <> pretty (unDN dn)
