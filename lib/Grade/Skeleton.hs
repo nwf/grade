@@ -35,4 +35,9 @@ makeSkel (Defs _ sl) =
   prettyDings [] = id
   prettyDings ds = (indent 1 (vcat $ map prettyDing ds) `above`)
 
-  prettyDing (dn, _) = "#:" <> pretty (unDN dn)
+  prettyDing (dn, DingDefn _ _ mult dcl) =
+    (if not (null dcl)
+     then (vcat (empty : map pretty dcl) `above`)
+     else id)
+    $ "#:" <> pretty (unDN dn)
+           <> (if mult then " # repeat as needed" else empty)
