@@ -1,0 +1,33 @@
+# Basic features of the handin
+@packaging
+ #:ftbfs_all
+
+$BEGIN_COMMENTS
+
+$END_COMMENTS
+
+# Here is a section without any dings; it uses a different
+# section definition to take an argument directly in the
+# data file.
+@justScoreMe <score out of 10.0>
+
+$BEGIN_COMMENTS
+
+$END_COMMENTS
+
+# Manual test result section
+# Un-comment the appropriate directive for each test failed.
+@tests
+ #:simple_test
+ #:more_interesting_test_minor
+ #:misc_ding # repeat as needed
+
+$BEGIN_COMMENTS
+
+$END_COMMENTS
+
+# These lines will, despite this section being hidden, still
+# appear in the skeleton file.  This may be useful for giving
+# instructions to graders.
+
+# This is a second paragraph appearing in the skeleton.

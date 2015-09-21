@@ -37,4 +37,8 @@ $END_COMMENTS
 
 @tests2
 :some_other_test
-:yet_another_test
+#:yet_another_test
+
+$BEGIN_COMMENTS
+
+$END_COMMENTS

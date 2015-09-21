@@ -55,8 +55,8 @@ something like this::
   $END_COMMENTS
 
   # Automated test result section
+  # Un-comment the appropriate directive for each test failed.
   @tests
-   # Un-comment the appropriate directive for each test failed.
    #:ftbfs_all
    #:simple_test
    #:more_interesting_test
@@ -243,8 +243,8 @@ among other defines ::
   #! ...
 
   # Automated test result section
-  @tests 0 40 - Functionality Tests
   # Un-comment the appropriate directive for each test failed.
+  @tests 0 40 - Functionality Tests
 
   #! ...
 

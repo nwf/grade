@@ -1,0 +1,38 @@
+Packaging: [10.0/10.0] (100.0%)
+
+ Additional Grader Comments:
+ 
+  Some grader comments on packaging
+  
+Functionality Tests: [28.0/40.0] (70.0%)
+
+ (-6.0)
+ The buffer-passing test seems to mangle bytes on occasion.
+ 
+ (-10.0% == -4.0)
+ There is a minor problem with the buffer-passing test output
+ when given an unusually long input string.
+ 
+ (-1.0)
+ Some small problem happened (see grader commentary below).
+ 
+ (-1.0)
+ Some small problem happened (see grader commentary below).
+ 
+ Additional Grader Comments:
+ 
+  More grader comments in a different section
+  
+One Last Thing: [8.0/10.0] (80.0%)
+
+ Additional Grader Comments:
+ 
+  abcd
+  
+More Functionality Tests: [20.0/40.0] (50.0%)
+
+ (-20.0)
+ SOT
+ 
+ 
+TOTAL: [66.0/100.0] (66.0%)
