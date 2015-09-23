@@ -17,6 +17,7 @@ library
                        Grade.ParseUtils,
                        Grade.Parse,
                        Grade.Grade,
+                       Grade.GradeIO,
                        Grade.Score.Zeroing,
                        Grade.Score.Setting,
                        Grade.Score.Bounding,
@@ -37,6 +38,7 @@ library
                        parsers >=0.12 && <1,
                        text >=1.2 && <2,
                        trifecta >=1.5 && <2,
+                       ansi-wl-pprint >= 0.6 && <1,
                        wl-pprint-extras >=3.5 && <4
 
 executable grade

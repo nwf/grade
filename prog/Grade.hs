@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
@@ -9,10 +8,8 @@ module Main where
 import           Control.Monad (when)
 import           Data.Data (Data)
 
-import qualified Text.PrettyPrint.ANSI.Leijen as TPP
 import qualified Text.PrettyPrint.Free        as PP
 import qualified Text.Trifecta                as T
-import qualified Text.Trifecta.Delta          as T
 
 import qualified System.Console.CmdLib        as C
 import           System.Directory
@@ -21,9 +18,8 @@ import           System.Exit
 import           System.IO
 
 import           Grade.Parse
-import           Grade.Grade
 import           Grade.Skeleton
-import           Grade.Print
+import           Grade.GradeIO
 
 import qualified Grade.Score.EqualWeighted  as GSE
 import qualified Grade.Score.Simple         as GSS
@@ -66,50 +62,14 @@ doMakeSkeleton defi = do
     T.Failure f -> hPutStrLn stderr (show f)
     T.Success d -> print $ makeSkel d
 
-withDefinesOrElse :: FilePath -> (Defines T.Parser T.Caret -> IO a) -> IO a
-withDefinesOrElse defi act = do
-  mdefines <- T.parseFromFileEx (parseDefns sectys) defi
-  case mdefines of
-    T.Failure f -> do
-      hPutStrLn stderr "Error while parsing defines:"
-      hPutStrLn stderr (show f)
-      exitWith (ExitFailure 2)
-    T.Success defs -> act defs
-
-grade :: Defines T.Parser T.Caret -> FilePath -> (forall e . PP.Doc e -> IO Bool) -> IO Bool
-grade defs dati act = do
-  mdata <- T.parseFromFileEx (parseData defs) dati
-  case mdata of
-    T.Failure f -> do
-       hPutStrLn stderr $ "Error while parsing data file " ++ dati ++ ":"
-       hPutStrLn stderr (show f)
-       pure False
-    T.Success (dats, errs) ->
-      case errs of
-        [] -> case gradeOne defs dats of
-                Left e -> do
-                  hPutStrLn stderr $ "Error while grading " ++ dati ++ ":"
-                  hPutStrLn stderr $ show $ PP.vcat
-                                   $ map (printReportError showcaret) e
-                  pure False
-                Right r -> act (printReport r)
-        _  -> do
-               hPutStrLn stderr $ "Error while parsing data file " ++ dati ++ ":"
-               hPutStrLn stderr $ show $ PP.vcat
-                                $ map (printReportError showcaret) errs
-               pure False
-
-  where
-   showcaret = PP.text . show . TPP.pretty . T.delta
-
 doGradeOne :: FilePath -> FilePath -> IO ()
-doGradeOne defi dati = withDefinesOrElse defi $ \defs -> do
-  grade defs dati (\d -> PP.hPutDoc stdout d *> pure True) >>= \case
+doGradeOne defi dati = withDefinesOrElse sectys defi $ \defs -> do
+  withReportDoc defs dati (\d -> PP.hPutDoc stdout d) >>= \case
     True  -> pure ()
     False -> exitWith (ExitFailure 1)
 
 doGradeDir :: Int -> String -> FilePath -> FilePath -> IO ()
-doGradeDir verbose defi datd outd = withDefinesOrElse defi $ \defs -> do
+doGradeDir verbose defi datd outd = withDefinesOrElse sectys defi $ \defs -> do
   createDirectoryIfMissing True outd
   dentries <- getDirectoryContents datd
   oks <- flip mapM dentries $ \dentry -> do
@@ -119,8 +79,8 @@ doGradeDir verbose defi datd outd = withDefinesOrElse defi $ \defs -> do
                  pure True  -- Skip inner directories
                True -> do
                  when (verbose > 0) $ hPutStrLn stderr $ "Grading " ++ dentry
-                 grade defs (datd </> dentry)
-                       (\d -> withFile (outd </> dentry) WriteMode (flip PP.hPutDoc d) *> pure True)
+                 withReportDoc defs (datd </> dentry) $ \d ->
+                   withFile (outd </> dentry) WriteMode (flip PP.hPutDoc d)
   exitWith $ if and oks then ExitSuccess else ExitFailure 1
 
 data Cmd = MakeSkeleton { defines :: String }
