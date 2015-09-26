@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Grade.Grade (gradeOne) where
+module Grade.Grade (gradeOne, totalReport) where
 
 import           Control.Lens
 import           Data.Either
@@ -42,3 +42,7 @@ gradeOne (Defs defs _) (DF dfss) =
           Right _ -> Left [e]
  where
   processSec (sn,s) = bimap (RESectionError sn . pure . SEScoreError) id $ processDFS s
+
+totalReport :: ReportFile -> (Double,Double)
+totalReport (RF secs) = foldr (\(RFS _ ss sm _ _) (e,t) -> (ss+e,sm+t)) (0.0,0.0) secs
+

@@ -9,6 +9,7 @@ import           Numeric
 import           Text.PrettyPrint.Free
 
 import           Grade.Types
+import           Grade.Grade
 
 printSectionError :: (loc -> Doc e) -> SectionError loc -> Doc e
 printSectionError pl (SEUndefinedDing dn dl) =
@@ -46,10 +47,8 @@ printSection (RFS st ss smax sdc sgc) =
   magc x = if T.any (not . C.isSpace) x then agc x else empty
   agc x = "Additional Grader Comments:" <> line `above` indent 1 (pretty x)
 
-total :: ReportFile -> (Double,Double)
-total (RF secs) = foldr (\(RFS _ ss sm _ _) (e,t) -> (ss+e,sm+t)) (0.0,0.0) secs
 
 printReport :: ReportFile -> Doc e
 printReport r@(RF s) =
     vcat (map printSection s) <> line
- <> "TOTAL:" <+> (uncurry printGrade $ total r) <> line
+ <> "TOTAL:" <+> (uncurry printGrade $ totalReport r) <> line
