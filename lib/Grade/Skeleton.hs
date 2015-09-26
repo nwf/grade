@@ -2,7 +2,6 @@
 
 module Grade.Skeleton where
 
-import qualified Data.Map                     as M
 import qualified Data.Text                    as T
 import           Text.PrettyPrint.Free
 import           Grade.Types
@@ -37,7 +36,7 @@ makeSkel (Defs _ sl) =
 
   prettyDing (dn, DingDefn _ _ mult dcl) =
     (if not (null dcl)
-     then (vcat (empty : map pretty dcl) `above`)
+     then (above (vcat (map pretty dcl)) . indent 1)
      else id)
     $ "#:" <> pretty (unDN dn)
            <> (if mult then " # repeat as needed" else empty)
