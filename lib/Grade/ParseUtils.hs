@@ -6,10 +6,10 @@ module Grade.ParseUtils (
 
 import           Control.Applicative
 import           Data.ByteString (ByteString)
-import qualified Data.Map              as M
+import qualified Data.Map                         as M
 import           Data.Text (Text)
 import           Data.Text.Encoding (decodeUtf8')
-import qualified Text.Trifecta                as T
+import qualified Text.Trifecta                    as T
 
 ------------------------------------------------------------------------ }}}
 
