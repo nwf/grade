@@ -1,12 +1,15 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
+import           Control.Exception (assert)
 import           Control.Monad (when)
 import           Data.Data (Data)
+import           Data.List (nub,sort)
 
 import qualified Text.PrettyPrint.Free        as PP
 import qualified Text.Trifecta                as T
@@ -19,7 +22,9 @@ import           System.IO
 
 import           Grade.Parse
 import           Grade.Skeleton
+import           Grade.Grade
 import           Grade.GradeIO
+import           Grade.Print
 
 import qualified Grade.Score.EqualWeighted  as GSE
 import qualified Grade.Score.Simple         as GSS
@@ -68,20 +73,58 @@ doGradeOne defi dati = withDefinesOrElse sectys defi $ \defs -> do
     True  -> pure ()
     False -> exitWith (ExitFailure 1)
 
+data GradeDirResult = GDR_Skip
+                    | GDR_Error (PP.Doc ())
+                    | GDR_Report (ReportFile)
+
+partitionGDRs :: [GradeDirResult] -> (Bool, [PP.Doc ()], [ReportFile])
+partitionGDRs = go False [] []
+ where
+  go ss es rs []       = (ss,es,rs)
+  go ss es rs (x : xs) = case x of
+                          GDR_Skip     -> go True es     rs     xs
+                          GDR_Error  e -> go ss   (e:es) rs     xs
+                          GDR_Report r -> go ss   es     (r:rs) xs
+
 doGradeDir :: Int -> String -> FilePath -> FilePath -> IO ()
 doGradeDir verbose defi datd outd = withDefinesOrElse sectys defi $ \defs -> do
   createDirectoryIfMissing True outd
   dentries <- getDirectoryContents datd
-  oks <- flip mapM dentries $ \dentry -> do
+  results <- fmap partitionGDRs $ flip mapM dentries $ \dentry -> do
              doesFileExist (datd </> dentry) >>= \ case
                False -> do
-                 when (verbose > 1) $ hPutStrLn stderr $ "Skipping " ++ dentry ++ ": is directory"
-                 pure True  -- Skip inner directories
+                 when (verbose > 3) $ hPutStrLn stderr $ "Skipping " ++ dentry ++ ": is directory"
+                 pure GDR_Skip  -- Skip inner directories
                True -> do
-                 when (verbose > 0) $ hPutStrLn stderr $ "Grading " ++ dentry
-                 withReportDoc defs (datd </> dentry) $ \d ->
+                 when (verbose > 2) $ hPutStrLn stderr $ "Grading " ++ dentry
+                 res <- withReport defs (datd </> dentry) $ \r -> do
+                   let d = printReport r
                    withFile (outd </> dentry) WriteMode (flip PP.hPutDoc d)
-  exitWith $ if and oks then ExitSuccess else ExitFailure 1
+                   pure r
+                 case res of
+                   Left e -> do
+                      when (verbose <= 2) $ hPutStrLn stderr $ "Grading " ++ dentry
+                      PP.hPutDoc stderr e
+                      pure (GDR_Error e)
+                   Right r -> pure (GDR_Report r)
+  case results of
+    (_,_,[]) -> pure ()
+    (_,_,xs) -> do
+                 let totals = totalReport <$> xs
+                 -- Everyone's the same denominator, right?
+                 assert (length (nub (map snd totals)) == 1) $ return ()
+                 let scores = fst <$> totals
+                 case verbose of
+                   1          -> PP.hPutDoc stderr $ "Max score:"
+                                 PP.<+> PP.pretty (maximum scores)
+                                 PP.<>  PP.line
+                   x | x >= 2 -> PP.hPutDoc stderr $ "Totals:"
+                                 PP.<+> PP.align (PP.fillSep (PP.pretty <$> (sort scores)))
+                                 PP.<>  PP.line
+                   _          -> pure ()
+  exitWith $ case results of
+               (_,[],_) -> ExitSuccess
+               _        -> ExitFailure 1
 
 data Cmd = MakeSkeleton { defines :: String }
          | GradeOne { defines :: String, datafile :: String }
