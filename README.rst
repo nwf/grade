@@ -42,7 +42,7 @@ The instructor will have prepared a ``skeleton`` file which will look
 something like this::
 
   # Basic features of the handin 
-  @packaging
+  #@packaging
    #:ftbfs_all
    #:missing_readme
    #:readme_no_commentary
@@ -56,7 +56,7 @@ something like this::
 
   # Automated test result section
   # Un-comment the appropriate directive for each test failed.
-  @tests
+  #@tests
    #:ftbfs_all
    #:simple_test
    #:more_interesting_test
@@ -218,8 +218,7 @@ taste.
 
 Lines that begin with ``#`` and not ``#!`` will be copied into the skeleton.
 Lines beginning with ``#!`` will be ignored entirely, except for some
-additional advanced handling in comments immediately before a ``@`` section
-heading:
+additional advanced handling:
 
 * ``#!\n`` (yes, a literal backslash) will cause an empty line to be emitted
   into the skeleton if the containing section is not being skipped.

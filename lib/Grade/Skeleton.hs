@@ -7,8 +7,8 @@ import           Text.PrettyPrint.Free
 import           Grade.Types
 import           Grade.Parse (commentStart, commentEnd)
 
-interpSectionComments :: Bool -> [T.Text] -> Doc e
-interpSectionComments f0 = vcat . go f0
+interpComments :: Bool -> [T.Text] -> Maybe (Doc e)
+interpComments f0 t0 = let r = go f0 t0 in if null r then Nothing else Just (vcat r)
  where
   go _     []                             = []
   go _     ("#!noskip":bs)                = go False bs
@@ -23,20 +23,19 @@ makeSkel (Defs _ sl) =
   vcat $ punctuate line
   $ flip fmap sl
   $ \(sn, ExSec (Sec _ _ shidden scl _ sds msh)) ->
-    let scl' = interpSectionComments shidden scl in
+    let ic = interpComments shidden in
+    let scl' = ic scl in
     if shidden
-     then scl'
-     else scl'
-          `above` "@" <> pretty (unSN sn) <> maybe empty ((empty <+>) . pretty) (fst msh)
-          `above` prettyDings sds (vcat [empty, commentStart, empty, commentEnd])
+     then maybe empty id scl'
+     else maybe id above scl' $
+                  "#@" <> pretty (unSN sn) <> maybe empty ((empty <+>) . pretty) (fst msh)
+          `above` prettyDings ic sds (vcat [empty, commentStart, empty, commentEnd])
 
  where
-  prettyDings [] = id
-  prettyDings ds = (indent 1 (vcat $ map prettyDing ds) `above`)
+  prettyDings _ [] = id
+  prettyDings ic ds = (indent 1 (vcat $ map (prettyDing ic) ds) `above`)
 
-  prettyDing (dn, DingDefn _ _ mult dcl) =
-    (if not (null dcl)
-     then (above (vcat (map pretty dcl)) . indent 1)
-     else id)
+  prettyDing ic (dn, DingDefn _ _ mult dcl) =
+    maybe id (\c -> above c . indent 1) (ic dcl)
     $ "#:" <> pretty (unDN dn)
            <> (if mult then " # repeat as needed" else empty)
