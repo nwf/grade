@@ -157,13 +157,13 @@ where
       extra loss.
 
     * The word ``commenting`` followed by (whitespace and) another ``type``
-      will permit the definitions of flags with argument ``!C`` which will
+      will permit the definitions of flags with argument ``!C``, which will
       not influence the score at all and will not print out a score modifier
       before the flag text in generated reports.
 
     * The word ``zeroing`` followed by (whitespace and) another ``type``
-      will permit the definitions of flags with argument ``!0`` which will
-      set the section score to zero.
+      will permit the definitions of flags with score-modifier ``!0``, which
+      will set the section score to zero.
 
   Some shorthands are defined:
 
@@ -199,13 +199,6 @@ more than once.
   * a number followed by a ``%`` character, which will adjust the section
     score by that percentage of the maximum number of points available in
     the section.
-
-  * The literal string ``!0``.  Engaging any whole number of flags so
-    defined will set the section's score to zero.
-
-* For ``equal`` sections, the only permitted non-empty ``score-modifier``
-  is ``!0``, which is interpreted as in ``simple`` sections.  All other
-  flags in this type of section should have an empty ``score-modifier``.
 
 Text between the line beginning with ``:`` (or ``;``) and the dot on a line
 by itself will be copied into student grade reports whenever the flag is

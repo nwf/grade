@@ -15,7 +15,7 @@ parseCommented :: (T.TokenParsing f, Monoid sds)
                -> f (sdt,sds) -- ^ What is the underlying ding parser?
                -> f (Maybe sdt, sds)
 parseCommented pc pd = T.choice
-  [ -- Try parsing a zeroizing form
+  [ -- Try parsing a commenting form
     T.try pc *> pure (Nothing, mempty)
   , -- Otherwise, invoke the underlying parser
     (\(a,b) -> (Just a, b)) <$> pd

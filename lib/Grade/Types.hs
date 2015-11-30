@@ -42,21 +42,9 @@ data DingDefn mt loc = DingDefn
   , _dingd_multiple      :: Bool
   , _dingd_comment_lines :: [Text]
   }
- deriving (Eq,Ord,{-Show-}Typeable)
+ deriving (Eq,Ord,{-Show,-}Typeable)
 $(LTH.makeLenses ''DingDefn)
 
-data SecMeta sat sdt = SecMeta
-  { -- | Title of the section as displayed to the user, not
-    -- necessarily the internal name
-    _sm_title         :: Text
-  , -- | Maximum score
-    _sm_max           :: Double
-  , -- | Given a reduced sdsdum, format the score for presentation
-    -- or indicate that there has been an error.
-    _sm_scorefn       :: sat -> sdt -> Either String Double
-  , -- | Provide text for printing out the impact of a particular
-    -- score adjustment.
-    _sm_dingprinter   :: sat -> sdt -> Maybe String
   }
 $(LTH.makeLenses ''SecMeta)
 
@@ -68,9 +56,13 @@ $(LTH.makeLenses ''SecMeta)
 -- It also conains a section scoring function, which
 -- reduces dingmods to a score.
 data Section f sat sdt loc = Sec
-  { _sec_meta          :: SecMeta sat sdt
+  { -- | The section header, as displayed to the students
+    _sec_title         :: Text
+    -- | The location in the defines file
   , _sec_loc           :: loc
+    -- | Is this section to be emitted into the skeleton?
   , _sec_hidden        :: Bool
+    -- | Comment lines preceeding the section definition.
   , _sec_comment_lines :: [Text]
   , _sec_ding_by_name  :: Map DingName (DingDefn sdt loc)
   , _sec_dings         :: [(DingName, DingDefn sdt loc)]
@@ -79,24 +71,8 @@ data Section f sat sdt loc = Sec
  deriving (Typeable)
 $(LTH.makeLenses ''Section)
 
-{-
-instance (Show sdt, Show loc) => Show (Section sdt loc) where
-  show (Sec t m h _ d c) = "Section "
-    ++ (show t) ++ " "
-    ++ (show m) ++ " " 
-    ++ (show h) ++ " "
-    ++ "<fun> "
-    ++ (show d) ++ " "
-    ++ (show c)
--}
-
 -- | Existentially quantify the section data type for a given section
 data ExSection f loc = forall sat sdt . ({-Show sdt,-} Monoid sdt) => ExSec (Section f sat sdt loc)
-
-{-
-instance (Show loc) => Show (ExSection loc) where
-  show es = case es of ExSec s -> show s
--}
 
 -- | A Section Callback object, as returned by a section type parser
 data SecCallback f sps sat sdt = SC
@@ -106,14 +82,18 @@ data SecCallback f sps sat sdt = SC
     --
     -- The String is for use by the skeleton generator.
     sc_datline_parse :: (Maybe String, f sat)
+
   , -- | Parse section-specific ding weights
     sc_ding_parse    :: f (sdt,sps)
+
   , -- | Optional printout of the sdt data, given
     -- the section's final sps.
     sc_show_sdt      :: sps -> sat -> sdt -> Maybe String
+
   , -- | Scoring function, given section maximum
     -- value and the monoidal summary of section-specific dings
     sc_score         :: sps -> sat -> sdt -> Either String Double
+
   , -- | Maximum scoring function
     sc_max           :: sps -> Double
   }
@@ -121,6 +101,52 @@ data SecCallback f sps sat sdt = SC
 
 data ExSecCallback f = forall sps sat sdt . ({-Show sdt,-} Monoid sdt, Monoid sps)
                      => ExSecCB (SecCallback f sps sat sdt)
+
+{-
+-- | We often want to modify the action of dings in a section.  This is
+--   rather like a 'SecCallback' without the at-line types.
+data SecModCallback sps sdt = SMC
+  { -- | Parse a modified ding defintion.  If this succeeds, the remainder
+    --   of the ding definition chain will not be considered for this ding.
+    --
+    --   XXX Could maybe have a Boolean indicating whether to continue
+    --   parsing at the next stage.  We'd fan out the occurrence of the
+    --   ding to all subscribed stages, essentially...
+    --
+    --   XXX Also consider per-ding arguments in the *data* file...
+    smc_ding_parse :: f (sdt, sps)
+
+  , -- | Render a ding that was parsed by this section.  Rather than taking
+    --   the section heading value, if any, these take the computed section
+    --   maximum.
+    smc_show_sdt   :: sdt -> Double -> sdt -> Maybe String
+
+  , -- | Compute the new score after this modifier
+    smc_score      :: sps      -- ^ Cumulative section *parser* state
+                   -> sdt      -- ^ Cumulative section *ding* state
+                   -> Double    -- ^ Section maxiumum after all pipeline mods
+                   -> Double    -- ^ Section score from earlier stages
+                   -> Either String Double -- ^ Resulting section score
+
+  , -- | Given the maximum as computed by earlier modules, possibly alter it
+    --   in light of the cumulative parser state
+    smc_max_mod    :: sps -> Double -> Double
+  }
+-}
+
+{-
+data SecStatus sps sdt = SMC
+  { -- | The callback operations for this section
+    ss_smc :: SecModCallback sps sdt
+
+  , -- | The set of dings that have been claimed by this section.
+    ss_dings :: 
+
+    -- | The section's parser state itself; this will be updated during
+    -- the parser's run as the callback accepts various dings.
+  , ss_sps :: sps
+  }
+-}
 
 newtype SecName = SN { unSN :: Text }
  deriving (Eq,Ord,Show,Typeable)

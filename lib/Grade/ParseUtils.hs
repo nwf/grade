@@ -1,7 +1,7 @@
 -- Header -------------------------------------------------------------- {{{
 
 module Grade.ParseUtils (
-  toUtf8, sseof, word, hashComment, parseMapKeys
+  toUtf8, sseof, wordish, word, hashComment, parseMapKeys
 ) where
 
 import           Control.Applicative
@@ -21,10 +21,13 @@ toUtf8 = (>>= either (\e -> T.unexpected ("Invalid UTF-8: " ++ show e)) (pure) .
 sseof :: (T.TokenParsing f) => f ()
 sseof = (T.someSpace <|> T.eof)
 
+wordish :: (T.DeltaParsing f) => f Text
+wordish = toUtf8 (T.sliced (some (T.notFollowedBy T.someSpace *> T.anyChar)))
+
 -- | Grab a word in its entirety.  Note that this is a little strange as
 -- we check the 'notFollowedBy' condition *first*!
 word :: (T.DeltaParsing f) => f Text
-word = toUtf8 (T.sliced (many $ T.notFollowedBy T.someSpace *> T.anyChar)) <* sseof
+word = wordish <* sseof
 
 -- | Grab a comment beginning with # and going to end of line.
 hashComment :: T.DeltaParsing f => f Text
