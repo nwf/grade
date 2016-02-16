@@ -1,7 +1,7 @@
 -- Header -------------------------------------------------------------- {{{
 
 module Grade.ParseUtils (
-  toUtf8, sseof, word, hashComment, parseMapKeys
+  toUtf8, sseof, wordish, word, hashComment, parseMapKeys
 ) where
 
 import           Control.Applicative
@@ -23,8 +23,15 @@ sseof = (T.someSpace <|> T.eof)
 
 -- | Grab a word in its entirety.  Note that this is a little strange as
 -- we check the 'notFollowedBy' condition *first*!
+--
+-- Most likely you want this to be followed by space or EOF (see `word`),
+-- but you may want to be more specific.
+wordish :: (T.DeltaParsing f) => f Text
+wordish = toUtf8 (T.sliced (many $ T.notFollowedBy T.someSpace *> T.anyChar))
+
+-- | A wordish followed by some space or EOF.
 word :: (T.DeltaParsing f) => f Text
-word = toUtf8 (T.sliced (many $ T.notFollowedBy T.someSpace *> T.anyChar)) <* sseof
+word = wordish <* sseof
 
 -- | Grab a comment beginning with # and going to end of line.
 hashComment :: T.DeltaParsing f => f Text
