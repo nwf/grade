@@ -25,7 +25,7 @@ import           Data.Maybe (isJust)
 import qualified Text.Trifecta         as T
 import qualified Text.Trifecta.Delta   as T
 import qualified Text.Parser.LookAhead as T
--- import qualified Text.PrettyPrint.ANSI.Leijen as PP
+import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import Grade.Types
 import Grade.ParseUtils
@@ -57,6 +57,7 @@ parseDingDefn dl = do
   (dcs, reuse) <- T.try ((,) <$> many (hashComment) <*> leadchar)
   dn T.:^ c <- T.careted (DN <$> word)
   (dm, ds) <- dl
+  -- XXX optional comment here?
   dt <- untilDotLine
   pure (dn, ds, DingDefn (DingMeta dm dt) c reuse dcs)
  where
@@ -98,8 +99,12 @@ parseSectionDefn fsdap = do
      (dn, ds, db) <- parseDingDefn fsdt
      case M.lookup dn m of
        Nothing -> go (s `mappend` ds) (M.insert dn db m) ((dn,db):l)
-       Just _ -> do
-         T.raiseErr (T.Err (Just "Duplicate ding definition") [] mempty)
+       Just d -> do
+		 -- XXX this causes an error to be printed out *after* the ding,
+		 -- typically at the beginning of the next line.  Argh.  It's also
+		 -- really ugly but more informative than it was.
+         T.raiseErr (T.Err (Just $ "Duplicate ding definition" PP.<+> (PP.pretty $ show $ unDN dn) PP.<+> "original at"
+                                   PP.<+> (PP.pretty $ show $ _dingd_loc d)) [] mempty [])
 
 -- | Parse a definitions file
 parseDefns :: (T.DeltaParsing f, T.MarkParsing T.Delta f, T.Errable f, T.LookAheadParsing f)
@@ -113,7 +118,7 @@ parseDefns sectys = T.whiteSpace *> go M.empty [] <* T.eof
        Nothing -> go (M.insert sn sb m) ((sn,sb):l)
        Just _  -> do
          T.release (T.delta $ case sb of ExSec s -> _sec_loc s)
-         T.raiseErr (T.Err (Just "Duplicate section definition") [] mempty)
+         T.raiseErr (T.Err (Just "Duplicate section definition") [] mempty [])
 
 ------------------------------------------------------------------------ }}}
 -- Data ---------------------------------------------------------------- {{{

@@ -37,7 +37,7 @@ library
                        mtl >=2.2 && <3,
                        parsers >=0.12 && <1,
                        text >=1.2 && <2,
-                       trifecta >=1.5 && <2,
+                       trifecta >=1.6 && <1.7,
                        ansi-wl-pprint >= 0.6 && <1,
                        wl-pprint-extras >=3.5 && <4
 
@@ -50,7 +50,7 @@ executable grade
                        cmdlib >= 0.3 && <1,
                        directory >= 1.2 && <2,
                        filepath >= 1.4 && <2,
-                       trifecta >=1.5 && <2,
+                       trifecta >=1.6 && <1.7,
                        ansi-wl-pprint >= 0.6 && <1,
                        wl-pprint-extras >=3.5 && <4,
                        grade >=0.1

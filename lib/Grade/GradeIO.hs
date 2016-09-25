@@ -26,7 +26,7 @@ withDefines :: T.Parser (ExSecCallback T.Parser)
 withDefines sectys defi act = do
   mdefines <- T.parseFromFileEx (parseDefns sectys) defi
   case mdefines of
-    T.Failure f -> parseErr f
+    T.Failure f -> parseErr (T._errDoc f)
     T.Success defs -> Right <$> act defs
  where
   parseErr f = pure $ Left (        "Error while parsing defines" TPP.<+> TPP.pretty defi TPP.<> ":"
