@@ -29,7 +29,7 @@ makeSkel (Defs _ sl) =
      then maybe empty id scl'
      else maybe id above scl' $
                   "#@" <> pretty (unSN sn) <> maybe empty ((empty <+>) . pretty) (fst msh)
-          `above` prettyDings ic sds (vcat [empty, commentStart, empty, commentEnd])
+          `above` prettyDings ic sds (vcat [empty, "#" <> commentStart, empty, "#" <> commentEnd])
 
  where
   prettyDings _ [] = id
