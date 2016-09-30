@@ -51,7 +51,7 @@ withReport :: Defines T.Parser T.Caret
 withReport defs dati act = do
   mdata <- T.parseFromFileEx (parseData defs) dati
   case mdata of
-    T.Failure e -> parseErr (PP.pretty $ show e) -- XXX; sadness and woe
+    T.Failure e -> parseErr (PP.pretty $ show $ T._errDoc e) -- XXX; sadness and woe
     T.Success (dats, errs) ->
       case errs of
         [] -> case gradeOne defs dats of
