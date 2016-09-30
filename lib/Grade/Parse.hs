@@ -100,9 +100,9 @@ parseSectionDefn fsdap = do
      case M.lookup dn m of
        Nothing -> go (s `mappend` ds) (M.insert dn db m) ((dn,db):l)
        Just d -> do
-		 -- XXX this causes an error to be printed out *after* the ding,
-		 -- typically at the beginning of the next line.  Argh.  It's also
-		 -- really ugly but more informative than it was.
+         -- XXX this causes an error to be printed out *after* the ding,
+         -- typically at the beginning of the next line.  Argh.  It's also
+         -- really ugly but more informative than it was.
          T.raiseErr (T.Err (Just $ "Duplicate ding definition" PP.<+> (PP.pretty $ show $ unDN dn) PP.<+> "original at"
                                    PP.<+> (PP.pretty $ show $ _dingd_loc d)) [] mempty [])
 
